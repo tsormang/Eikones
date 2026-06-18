@@ -3,6 +3,8 @@ using CommunityToolkit.Mvvm.Input;
 using Eikones.Models;
 using Eikones.Services;
 using Eikones.Views;
+using System.IO;
+using System.Windows;
 
 namespace Eikones.ViewModels;
 
@@ -85,19 +87,93 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        _settings.SourceFolderPath = vm.SourceFolderPath;
-        _settings.DestinationFolderPath = vm.DestinationFolderPath;
+        if (!TryValidateFolder(vm.SourceFolderPath, out var sourceError))
+        {
+            MessageBox.Show(sourceError, "Invalid source folder", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (!TryValidateFolder(vm.DestinationFolderPath, out var destinationError))
+        {
+            MessageBox.Show(destinationError, "Invalid destination folder", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        _settings.SourceFolderPath = Path.GetFullPath(vm.SourceFolderPath!);
+        _settings.DestinationFolderPath = Path.GetFullPath(vm.DestinationFolderPath!);
         _settingsRepository.Save(_settings);
 
-        Preview.DestinationFolderPath = _settings.DestinationFolderPath;
-        DestinationList.SourceFolderPath = _settings.SourceFolderPath;
-        await SourceBrowser.LoadFolderAsync(_settings.SourceFolderPath);
-        await DestinationList.LoadFolderAsync(_settings.DestinationFolderPath);
+        await ApplySourceFolderAsync(_settings.SourceFolderPath);
+        await ApplyDestinationFolderAsync(_settings.DestinationFolderPath);
+    }
+
+    public async Task<bool> TrySetSourceFolderFromDropAsync(string folderPath)
+    {
+        if (!TryValidateFolder(folderPath, out var error))
+        {
+            MessageBox.Show(error, "Invalid source folder", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
+        }
+
+        var normalized = Path.GetFullPath(folderPath);
+        _settings.SourceFolderPath = normalized;
+        _settingsRepository.Save(_settings);
+        await ApplySourceFolderAsync(normalized);
+        return true;
+    }
+
+    public async Task<bool> TrySetDestinationFolderFromDropAsync(string folderPath)
+    {
+        if (!TryValidateFolder(folderPath, out var error))
+        {
+            MessageBox.Show(error, "Invalid destination folder", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
+        }
+
+        var normalized = Path.GetFullPath(folderPath);
+        _settings.DestinationFolderPath = normalized;
+        _settingsRepository.Save(_settings);
+        await ApplyDestinationFolderAsync(normalized);
+        return true;
+    }
+
+    private async Task ApplySourceFolderAsync(string? folderPath)
+    {
+        DestinationList.SourceFolderPath = folderPath;
+        await SourceBrowser.LoadFolderAsync(folderPath);
 
         if (SelectedImage is not null && !SourceBrowser.Images.Contains(SelectedImage))
         {
             SelectedImage = SourceBrowser.Images.FirstOrDefault();
         }
+        else if (SelectedImage is null && SourceBrowser.Images.Count > 0)
+        {
+            SelectedImage = SourceBrowser.Images[0];
+        }
+    }
+
+    private async Task ApplyDestinationFolderAsync(string? folderPath)
+    {
+        Preview.DestinationFolderPath = folderPath;
+        await DestinationList.LoadFolderAsync(folderPath);
+    }
+
+    private static bool TryValidateFolder(string? folderPath, out string errorMessage)
+    {
+        if (string.IsNullOrWhiteSpace(folderPath))
+        {
+            errorMessage = "Folder path is empty.";
+            return false;
+        }
+
+        if (!Directory.Exists(folderPath))
+        {
+            errorMessage = $"The folder does not exist or is not accessible:\n{folderPath}";
+            return false;
+        }
+
+        errorMessage = string.Empty;
+        return true;
     }
 
     partial void OnSelectedImageChanged(ImageItemViewModel? value)

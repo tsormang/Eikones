@@ -1,7 +1,10 @@
 <UserControl x:Class="Eikones.Views.DestinationColumnView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="clr-namespace:Eikones.ViewModels">
+             xmlns:vm="clr-namespace:Eikones.ViewModels"
+             AllowDrop="True"
+             DragOver="DestinationColumn_OnDragOver"
+             Drop="DestinationColumn_OnDrop">
     <Border BorderBrush="#E0E0E0" BorderThickness="1,0,0,0">
         <Grid>
             <Grid.RowDefinitions>
