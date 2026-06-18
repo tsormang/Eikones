@@ -1,0 +1,26 @@
+# Visual Studio / IDE state (machine-specific, auto-generated)
+.vs/
+
+# Build output
+[Bb]in/
+[Oo]bj/
+
+# User-specific project/solution files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# NuGet
+*.nupkg
+**/packages/*
+!**/packages/build/
+
+# Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# OS files
+Thumbs.db
+Desktop.ini
