@@ -14,28 +14,36 @@
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0">
-            <Image Source="{Binding Preview.PlaceholderSource}"
-                   Stretch="Uniform"
-                   RenderOptions.BitmapScalingMode="LowQuality">
-                <Image.Effect>
-                    <BlurEffect Radius="12" KernelType="Gaussian"/>
-                </Image.Effect>
-            </Image>
+            <Viewbox Stretch="Uniform"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center">
+                <Image Source="{Binding Preview.PlaceholderSource}"
+                       Stretch="None"
+                       RenderOptions.BitmapScalingMode="LowQuality">
+                    <Image.Effect>
+                        <BlurEffect Radius="12" KernelType="Gaussian"/>
+                    </Image.Effect>
+                </Image>
+            </Viewbox>
 
-            <Image Source="{Binding Preview.FullPreviewSource}"
-                   Stretch="Uniform"
-                   RenderOptions.BitmapScalingMode="HighQuality">
-                <Image.Style>
-                    <Style TargetType="Image">
-                        <Setter Property="Opacity" Value="1"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding Preview.FullPreviewSource}" Value="{x:Null}">
-                                <Setter Property="Opacity" Value="0"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Image.Style>
-            </Image>
+            <Viewbox Stretch="Uniform"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center">
+                <Image Source="{Binding Preview.FullPreviewSource}"
+                       Stretch="None"
+                       RenderOptions.BitmapScalingMode="HighQuality">
+                    <Image.Style>
+                        <Style TargetType="Image">
+                            <Setter Property="Opacity" Value="1"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Preview.FullPreviewSource}" Value="{x:Null}">
+                                    <Setter Property="Opacity" Value="0"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Image.Style>
+                </Image>
+            </Viewbox>
 
             <TextBlock HorizontalAlignment="Center"
                        VerticalAlignment="Center"

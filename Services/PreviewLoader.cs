@@ -69,11 +69,26 @@ public sealed class PreviewLoader : IPreviewLoader
         try
         {
             using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true);
+            var decoder = BitmapDecoder.Create(stream, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
+            var frame = decoder.Frames[0];
+            var pixelWidth = frame.PixelWidth;
+            var pixelHeight = frame.PixelHeight;
+
+            stream.Position = 0;
             var bitmap = new BitmapImage();
             bitmap.BeginInit();
             bitmap.CacheOption = BitmapCacheOption.OnLoad;
             bitmap.StreamSource = stream;
-            bitmap.DecodePixelWidth = maxEdge;
+
+            if (pixelWidth >= pixelHeight)
+            {
+                bitmap.DecodePixelWidth = maxEdge;
+            }
+            else
+            {
+                bitmap.DecodePixelHeight = maxEdge;
+            }
+
             bitmap.EndInit();
             bitmap.Freeze();
             return bitmap;
