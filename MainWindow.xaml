@@ -9,7 +9,7 @@
         MinWidth="900"
         Loaded="MainWindow_OnLoaded"
         Closing="MainWindow_OnClosing"
-        KeyDown="MainWindow_OnKeyDown">
+        PreviewKeyDown="MainWindow_OnKeyDown">
     <DockPanel>
         <ToolBar DockPanel.Dock="Top" Background="#F5F5F5">
             <Button Content="Settings"

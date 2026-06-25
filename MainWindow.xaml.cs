@@ -39,6 +39,13 @@ public partial class MainWindow : Window
             return;
         }
 
+        // Don't intercept Up/Down while a text-editing control has focus
+        // (e.g. the new-folder name TextBox in the destination column).
+        if (Keyboard.FocusedElement is System.Windows.Controls.Primitives.TextBoxBase)
+        {
+            return;
+        }
+
         var images = _viewModel.SourceBrowser.Images;
         if (images.Count == 0)
         {
