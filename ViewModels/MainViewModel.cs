@@ -5,6 +5,7 @@ using Eikones.Services;
 using Eikones.Views;
 using System.IO;
 using System.Windows;
+using Microsoft.Win32;
 
 namespace Eikones.ViewModels;
 
@@ -123,6 +124,24 @@ public partial class MainViewModel : ObservableObject
         _settingsRepository.Save(_settings);
         await ApplySourceFolderAsync(normalized);
         return true;
+    }
+
+    [RelayCommand]
+    private async Task SelectSourceFolderAsync()
+    {
+        var dialog = new OpenFolderDialog
+        {
+            Title = "Select source folder",
+            InitialDirectory = string.IsNullOrWhiteSpace(_settings.SourceFolderPath) ? null : _settings.SourceFolderPath,
+            Multiselect = false
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        await TrySetSourceFolderFromDropAsync(dialog.FolderName);
     }
 
     [RelayCommand]
