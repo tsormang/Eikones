@@ -33,6 +33,7 @@
 
     <Window.InputBindings>
         <KeyBinding Key="Delete" Command="{Binding Preview.DeleteCommand}"/>
+        <KeyBinding Key="Delete" Modifiers="Shift" Command="{Binding DeleteAllPreviousCommand}"/>
         <KeyBinding Key="Enter" Command="{Binding Preview.MoveCommand}"/>
         <KeyBinding Key="M" Command="{Binding Preview.MoveCommand}"/>
         <KeyBinding Key="O" Modifiers="Ctrl" Command="{Binding OpenSettingsCommand}"/>

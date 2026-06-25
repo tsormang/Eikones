@@ -11,15 +11,18 @@ namespace Eikones.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     private readonly ISettingsRepository _settingsRepository;
+    private readonly IFileDeleteService _fileDeleteService;
     private AppSettings _settings;
 
     public MainViewModel(
         ISettingsRepository settingsRepository,
+        IFileDeleteService fileDeleteService,
         SourceBrowserViewModel sourceBrowser,
         PreviewViewModel preview,
         DestinationListViewModel destinationList)
     {
         _settingsRepository = settingsRepository;
+        _fileDeleteService = fileDeleteService;
         SourceBrowser = sourceBrowser;
         Preview = preview;
         DestinationList = destinationList;
@@ -185,7 +188,63 @@ public partial class MainViewModel : ObservableObject
         {
             _ = SourceBrowser.EnsureThumbnailAsync(value);
         }
+
+        DeleteAllPreviousCommand.NotifyCanExecuteChanged();
     }
+
+    [RelayCommand(CanExecute = nameof(CanDeleteAllPrevious))]
+    private async Task DeleteAllPreviousAsync()
+    {
+        if (SelectedImage is null)
+        {
+            return;
+        }
+
+        var index = SourceBrowser.Images.IndexOf(SelectedImage);
+        if (index < 0)
+        {
+            return;
+        }
+
+        var toDelete = SourceBrowser.Images.Take(index + 1).ToList();
+        var nextImage = index + 1 < SourceBrowser.Images.Count ? SourceBrowser.Images[index + 1] : null;
+        var failedCount = 0;
+
+        foreach (var image in toDelete)
+        {
+            if (await _fileDeleteService.DeleteToRecycleBinAsync(image.FilePath))
+            {
+                SourceBrowser.RemoveImage(image);
+            }
+            else
+            {
+                failedCount++;
+            }
+        }
+
+        SourceBrowser.StatusMessage = failedCount == 0
+            ? $"{SourceBrowser.Images.Count} image(s)"
+            : $"{SourceBrowser.Images.Count} image(s) — failed to delete {failedCount} file(s)";
+
+        if (nextImage is not null && SourceBrowser.Images.Contains(nextImage))
+        {
+            SelectedImage = nextImage;
+        }
+        else if (SelectedImage is not null && SourceBrowser.Images.Contains(SelectedImage))
+        {
+            // Selected image was not deleted (e.g. delete failed).
+        }
+        else if (SourceBrowser.Images.Count > 0)
+        {
+            SelectedImage = SourceBrowser.Images[0];
+        }
+        else
+        {
+            SelectedImage = null;
+        }
+    }
+
+    private bool CanDeleteAllPrevious() => SelectedImage is not null;
 
     private void OnImageDeleted(object? sender, ImageItemViewModel image) =>
         AdvanceAfterRemoval(image);
@@ -203,18 +262,19 @@ public partial class MainViewModel : ObservableObject
         var index = SourceBrowser.Images.IndexOf(image);
         SourceBrowser.RemoveImage(image);
 
+        if (SourceBrowser.Images.Count == 0)
+        {
+            SelectedImage = null;
+        }
+        else
+        {
+            var nextIndex = Math.Clamp(index - 1, 0, SourceBrowser.Images.Count - 1);
+            SelectedImage = SourceBrowser.Images[nextIndex];
+        }
+
         if (refreshDestination)
         {
             await DestinationList.LoadFolderAsync(_settings.DestinationFolderPath);
         }
-
-        if (SourceBrowser.Images.Count == 0)
-        {
-            SelectedImage = null;
-            return;
-        }
-
-        var nextIndex = index >= SourceBrowser.Images.Count ? SourceBrowser.Images.Count - 1 : index;
-        SelectedImage = SourceBrowser.Images[nextIndex];
     }
 }

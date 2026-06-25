@@ -81,6 +81,10 @@
                     Margin="6,0"
                     Padding="16,8"
                     Command="{Binding Preview.DeleteCommand}"/>
+            <Button Content="Delete all Previous (Shift+Del)"
+                    Margin="6,0"
+                    Padding="16,8"
+                    Command="{Binding DeleteAllPreviousCommand}"/>
             <Button Content="Move (Enter)"
                     Margin="6,0"
                     Padding="16,8"
