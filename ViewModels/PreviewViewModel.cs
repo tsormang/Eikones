@@ -99,7 +99,7 @@ public partial class PreviewViewModel : ObservableObject
 
         try
         {
-            var metadataTask = _metadataReader.GetDateTakenAsync(image.FilePath, token);
+            var metadataTask = _metadataReader.GetDateTakenDisplayAsync(image.FilePath, token);
             var previewTask = _previewLoader.LoadPreviewAsync(image.FilePath, PreviewMaxEdge, token);
 
             await Task.WhenAll(metadataTask, previewTask);
@@ -177,8 +177,8 @@ public partial class PreviewViewModel : ObservableObject
     partial void OnDestinationFolderPathChanged(string? value) =>
         MoveCommand.NotifyCanExecuteChanged();
 
-    private static string FormatDateTaken(DateTime? dateTaken) =>
-        dateTaken.HasValue
-            ? $"Date taken: {dateTaken.Value.ToLocalTime():yyyy - MM - dd}"
-            : "Date taken: unavailable";
+    private static string FormatDateTaken(string? dateTaken) =>
+        string.IsNullOrWhiteSpace(dateTaken)
+            ? "Date taken: unavailable"
+            : $"Date taken: {dateTaken}";
 }

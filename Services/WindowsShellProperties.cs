@@ -9,7 +9,7 @@ internal static class WindowsShellProperties
         new Guid("4D77D521-6B80-4CC4-88CF-ECF5F35BAF94"),
         11);
 
-    public static DateTime? TryGetDateTaken(string path)
+    public static string? TryGetDateTakenDisplay(string path)
     {
         if (!File.Exists(path))
         {
@@ -31,8 +31,8 @@ internal static class WindowsShellProperties
             {
                 return value.vt switch
                 {
-                    VarEnum.VT_FILETIME => DateTime.FromFileTimeUtc(value.filetime).ToLocalTime(),
-                    VarEnum.VT_DATE => DateTime.FromOADate(value.date),
+                    VarEnum.VT_FILETIME => FormatDayMonthYear(DateTime.FromFileTimeUtc(value.filetime).ToLocalTime()),
+                    VarEnum.VT_DATE => FormatDayMonthYear(DateTime.FromOADate(value.date)),
                     _ => null
                 };
             }
@@ -53,6 +53,9 @@ internal static class WindowsShellProperties
             }
         }
     }
+
+    private static string FormatDayMonthYear(DateTime dateTime) =>
+        $"{dateTime.Day:D2}/{dateTime.Month:D2}/{dateTime.Year}";
 
     [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = false)]
     [return: MarshalAs(UnmanagedType.Interface)]

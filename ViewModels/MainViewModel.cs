@@ -313,17 +313,21 @@ public partial class MainViewModel : ObservableObject
     private async void AdvanceAfterRemoval(ImageItemViewModel image, bool refreshDestination = false)
     {
         var index = SourceBrowser.Images.IndexOf(image);
-        SourceBrowser.RemoveImage(image);
 
-        if (SourceBrowser.Images.Count == 0)
+        // Pre-select the successor before removing the item from the collection.
+        // If the removal happens while the item is still selected, the ListBox's
+        // TwoWay binding clears SelectedImage (because the selected item disappeared),
+        // which can overwrite the value we set afterwards and break keyboard navigation.
+        // By selecting the next item first, the removed item is no longer selected
+        // when it leaves the collection, so the binding never fires the null back.
+        if (index >= 0)
         {
-            SelectedImage = null;
+            SelectedImage = SourceBrowser.Images.Count <= 1
+                ? null
+                : SourceBrowser.Images[index > 0 ? index - 1 : 1];
         }
-        else
-        {
-            var nextIndex = Math.Clamp(index - 1, 0, SourceBrowser.Images.Count - 1);
-            SelectedImage = SourceBrowser.Images[nextIndex];
-        }
+
+        SourceBrowser.RemoveImage(image);
 
         if (refreshDestination)
         {

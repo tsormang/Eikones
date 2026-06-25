@@ -1,6 +1,6 @@
-using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Media.Imaging;
 
 namespace Eikones.Services;
@@ -19,10 +19,14 @@ public sealed class ImageMetadataReader : IImageMetadataReader
         "/xmp/xmp:CreateDate"
     ];
 
-    public Task<DateTime?> GetDateTakenAsync(string path, CancellationToken cancellationToken = default) =>
-        Task.Run(() => ReadDateTaken(path), cancellationToken);
+    private static readonly Regex DayMonthYearPattern = new(
+        @"^\d{1,2}/\d{1,2}/\d{4}$",
+        RegexOptions.CultureInvariant);
 
-    private static DateTime? ReadDateTaken(string path)
+    public Task<string?> GetDateTakenDisplayAsync(string path, CancellationToken cancellationToken = default) =>
+        Task.Run(() => ReadDateTakenDisplay(path), cancellationToken);
+
+    private static string? ReadDateTakenDisplay(string path)
     {
         if (!File.Exists(path))
         {
@@ -31,8 +35,8 @@ public sealed class ImageMetadataReader : IImageMetadataReader
 
         try
         {
-            var fromBitmap = ReadDateTakenFromBitmapMetadata(path);
-            if (fromBitmap.HasValue)
+            var fromBitmap = ReadDateTakenDisplayFromBitmapMetadata(path);
+            if (!string.IsNullOrWhiteSpace(fromBitmap))
             {
                 return fromBitmap;
             }
@@ -42,10 +46,10 @@ public sealed class ImageMetadataReader : IImageMetadataReader
             // Fall through to shell properties.
         }
 
-        return WindowsShellProperties.TryGetDateTaken(path);
+        return WindowsShellProperties.TryGetDateTakenDisplay(path);
     }
 
-    private static DateTime? ReadDateTakenFromBitmapMetadata(string path)
+    private static string? ReadDateTakenDisplayFromBitmapMetadata(string path)
     {
         using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true);
         var decoder = BitmapDecoder.Create(stream, BitmapCreateOptions.None, BitmapCacheOption.Default);
@@ -60,7 +64,7 @@ public sealed class ImageMetadataReader : IImageMetadataReader
         }
 
         if (!string.IsNullOrWhiteSpace(metadata.DateTaken)
-            && TryParseExifDate(metadata.DateTaken, out var fromProperty))
+            && TryFormatRawDateString(metadata.DateTaken, out var fromProperty))
         {
             return fromProperty;
         }
@@ -68,49 +72,65 @@ public sealed class ImageMetadataReader : IImageMetadataReader
         foreach (var query in DateTakenQueries)
         {
             if (metadata.GetQuery(query) is { } rawValue
-                && TryParseQueryValue(rawValue, out var parsed))
+                && TryFormatQueryValue(rawValue, out var formatted))
             {
-                return parsed;
+                return formatted;
             }
         }
 
         return null;
     }
 
-    private static bool TryParseQueryValue(object rawValue, out DateTime result)
+    private static bool TryFormatQueryValue(object rawValue, out string? formatted)
     {
-        result = default;
+        formatted = null;
 
         var rawDate = rawValue switch
         {
             string text => text,
             byte[] bytes => Encoding.ASCII.GetString(bytes).TrimEnd('\0'),
-            DateTime dateTime => dateTime.ToString("yyyy:MM:dd HH:mm:ss", CultureInfo.InvariantCulture),
+            DateTime dateTime => dateTime.ToString("yyyy:MM:dd HH:mm:ss"),
             _ => rawValue.ToString()
         };
 
-        return !string.IsNullOrWhiteSpace(rawDate) && TryParseExifDate(rawDate, out result);
+        return !string.IsNullOrWhiteSpace(rawDate) && TryFormatRawDateString(rawDate, out formatted);
     }
 
-    private static bool TryParseExifDate(string rawDate, out DateTime result)
+    private static bool TryFormatRawDateString(string rawDate, out string? formatted)
     {
-        var formats = new[]
-        {
-            "yyyy:MM:dd HH:mm:ss",
-            "yyyy:MM:dd HH:mm:ssK",
-            "yyyy-MM-dd HH:mm:ss",
-            "yyyy-MM-ddTHH:mm:ss",
-            "yyyy-MM-ddTHH:mm:ssK",
-            "yyyy-MM-ddTHH:mm:ss.fff",
-            "yyyy-MM-ddTHH:mm:ss.fffK"
-        };
+        formatted = null;
+        var trimmed = rawDate.Trim();
+        var datePart = trimmed.Split([' ', 'T'], StringSplitOptions.RemoveEmptyEntries)[0];
 
-        return DateTime.TryParseExact(
-                   rawDate.Trim(),
-                   formats,
-                   CultureInfo.InvariantCulture,
-                   DateTimeStyles.AssumeLocal | DateTimeStyles.AllowWhiteSpaces,
-                   out result)
-               || DateTime.TryParse(rawDate, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out result);
+        if (DayMonthYearPattern.IsMatch(datePart))
+        {
+            formatted = datePart;
+            return true;
+        }
+
+        if (TryReorderDateParts(datePart, ':', out formatted)
+            || TryReorderDateParts(datePart, '-', out formatted))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryReorderDateParts(string datePart, char separator, out string? formatted)
+    {
+        formatted = null;
+        var parts = datePart.Split(separator);
+        if (parts.Length < 3
+            || parts[0].Length != 4
+            || !int.TryParse(parts[0], out _)
+            || !int.TryParse(parts[1], out var month)
+            || !int.TryParse(parts[2], out var day))
+        {
+            return false;
+        }
+
+        formatted = $"{day:D2}/{month:D2}/{parts[0]}";
+        return true;
     }
 }
