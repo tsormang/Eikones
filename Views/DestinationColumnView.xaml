@@ -9,6 +9,7 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
@@ -19,8 +20,23 @@
                        Text="{Binding DestinationList.StatusMessage}"
                        TextTrimming="CharacterEllipsis"/>
 
+            <Grid Grid.Row="1" Margin="8,0,8,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox Grid.Column="0"
+                         Margin="0,0,8,0"
+                         Padding="4,2"
+                         Text="{Binding DestinationList.NewFolderName, UpdateSourceTrigger=PropertyChanged}"/>
+                <Button Grid.Column="1"
+                        Content="New Folder"
+                        Padding="8,2"
+                        Command="{Binding CreateNewDestinationFolderCommand}"/>
+            </Grid>
+
             <ListBox x:Name="DestinationList"
-                     Grid.Row="1"
+                     Grid.Row="2"
                      ItemsSource="{Binding DestinationList.Files}"
                      SelectedItem="{Binding DestinationList.SelectedFile, Mode=TwoWay}"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -54,7 +70,7 @@
                 </ListBox.ItemTemplate>
             </ListBox>
 
-            <TextBlock Grid.Row="1"
+            <TextBlock Grid.Row="2"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"
                        Foreground="#999999"

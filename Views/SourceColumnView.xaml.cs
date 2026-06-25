@@ -12,6 +12,23 @@ public partial class SourceColumnView : UserControl
         InitializeComponent();
     }
 
+    public void FocusListAtSelection()
+    {
+        SourceList.Focus();
+
+        if (SourceList.SelectedItem is null)
+        {
+            return;
+        }
+
+        SourceList.ScrollIntoView(SourceList.SelectedItem);
+
+        if (SourceList.ItemContainerGenerator.ContainerFromItem(SourceList.SelectedItem) is ListBoxItem listBoxItem)
+        {
+            listBoxItem.Focus();
+        }
+    }
+
     private void SourceColumn_OnDragOver(object sender, DragEventArgs e) =>
         FolderDropHelper.HandleDragOver(e);
 
@@ -40,6 +57,7 @@ public partial class SourceColumnView : UserControl
 
         if (SourceList.SelectedItem is ImageItemViewModel item)
         {
+            SourceList.ScrollIntoView(item);
             await mainVm.SourceBrowser.EnsureThumbnailAsync(item);
         }
     }

@@ -50,6 +50,9 @@ public partial class DestinationListViewModel : ObservableObject
     [ObservableProperty]
     private string _statusMessage = "No destination folder selected.";
 
+    [ObservableProperty]
+    private string _newFolderName = string.Empty;
+
     public event EventHandler<ImageItemViewModel>? FileDeleted;
     public event EventHandler<ImageItemViewModel>? FileRestored;
 

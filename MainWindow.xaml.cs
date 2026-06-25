@@ -34,13 +34,40 @@ public partial class MainWindow : Window
 
     private void MainWindow_OnKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key is Key.Up or Key.Down)
+        if (e.Key is not (Key.Up or Key.Down))
         {
-            FocusSourceList();
+            return;
         }
+
+        var images = _viewModel.SourceBrowser.Images;
+        if (images.Count == 0)
+        {
+            return;
+        }
+
+        var currentIndex = _viewModel.SelectedImage is { } selected
+            ? images.IndexOf(selected)
+            : -1;
+
+        if (currentIndex < 0)
+        {
+            currentIndex = 0;
+        }
+
+        var nextIndex = e.Key == Key.Down
+            ? Math.Min(currentIndex + 1, images.Count - 1)
+            : Math.Max(currentIndex - 1, 0);
+
+        if (nextIndex != currentIndex || _viewModel.SelectedImage is null)
+        {
+            _viewModel.SelectedImage = images[nextIndex];
+        }
+
+        FocusSourceListAtSelection();
+        e.Handled = true;
     }
 
-    private void FocusSourceList()
+    private void FocusSourceListAtSelection()
     {
         if (Content is not FrameworkElement root)
         {
@@ -48,7 +75,7 @@ public partial class MainWindow : Window
         }
 
         var sourceView = FindVisualChild<Views.SourceColumnView>(root);
-        sourceView?.Focus();
+        sourceView?.FocusListAtSelection();
     }
 
     private static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject

@@ -125,6 +125,59 @@ public partial class MainViewModel : ObservableObject
         return true;
     }
 
+    [RelayCommand]
+    private async Task CreateNewDestinationFolderAsync()
+    {
+        var name = DestinationList.NewFolderName.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            MessageBox.Show("Enter a folder name.", "New folder", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+        {
+            MessageBox.Show("The folder name contains invalid characters.", "New folder", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var currentFolder = _settings.DestinationFolderPath;
+        if (!TryValidateFolder(currentFolder, out _))
+        {
+            MessageBox.Show("Select a destination folder first.", "New folder", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var parent = Path.GetDirectoryName(currentFolder);
+        if (string.IsNullOrEmpty(parent))
+        {
+            MessageBox.Show("Cannot create a folder next to the root directory.", "New folder", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var newFolderPath = Path.GetFullPath(Path.Combine(parent, name));
+        if (Directory.Exists(newFolderPath))
+        {
+            MessageBox.Show($"A folder named \"{name}\" already exists.", "New folder", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(newFolderPath);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Failed to create folder:\n{ex.Message}", "New folder", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        DestinationList.NewFolderName = string.Empty;
+        _settings.DestinationFolderPath = newFolderPath;
+        _settingsRepository.Save(_settings);
+        await ApplyDestinationFolderAsync(newFolderPath);
+    }
+
     public async Task<bool> TrySetDestinationFolderFromDropAsync(string folderPath)
     {
         if (!TryValidateFolder(folderPath, out var error))

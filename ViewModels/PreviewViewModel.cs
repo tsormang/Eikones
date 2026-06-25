@@ -179,6 +179,6 @@ public partial class PreviewViewModel : ObservableObject
 
     private static string FormatDateTaken(DateTime? dateTaken) =>
         dateTaken.HasValue
-            ? $"Date taken: {dateTaken.Value.ToLocalTime():g}"
+            ? $"Date taken: {dateTaken.Value.ToLocalTime():yyyy - MM - dd}"
             : "Date taken: unavailable";
 }
