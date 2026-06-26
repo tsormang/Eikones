@@ -18,6 +18,18 @@
                     ToolTip="Open settings (Ctrl+,)"/>
         </ToolBar>
 
+        <Border DockPanel.Dock="Top"
+                Background="#EEF3F8"
+                BorderBrush="#D0D0D0"
+                BorderThickness="0,0,0,1"
+                Padding="12,6">
+            <TextBlock Text="{Binding SourceBrowser.FolderFileSummary}"
+                       FontSize="12"
+                       Foreground="#444444"
+                       TextTrimming="CharacterEllipsis"
+                       ToolTip="{Binding SourceBrowser.FolderFileSummary}"/>
+        </Border>
+
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="220" MinWidth="180" MaxWidth="320"/>

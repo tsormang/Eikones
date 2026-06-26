@@ -316,6 +316,8 @@ public partial class MainViewModel : ObservableObject
             ? $"{SourceBrowser.Images.Count} image(s)"
             : $"{SourceBrowser.Images.Count} image(s) — failed to delete {failedCount} file(s)";
 
+        _ = SourceBrowser.RefreshFileCountsAsync();
+
         if (nextImage is not null && SourceBrowser.Images.Contains(nextImage))
         {
             SelectedImage = nextImage;
@@ -365,6 +367,7 @@ public partial class MainViewModel : ObservableObject
         }
 
         SourceBrowser.RemoveImage(image);
+        _ = SourceBrowser.RefreshFileCountsAsync();
 
         if (refreshDestination)
         {

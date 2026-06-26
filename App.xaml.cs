@@ -21,6 +21,7 @@ public partial class App : Application
                 services.AddSingleton<ISettingsRepository, JsonSettingsRepository>();
                 services.AddSingleton<IImageCache, ImageCache>();
                 services.AddSingleton<IFileScanner, FileScanner>();
+                services.AddSingleton<IFolderFileCounter, FolderFileCounter>();
                 services.AddSingleton<IThumbnailService, ThumbnailService>();
                 services.AddSingleton<IPreviewLoader, PreviewLoader>();
                 services.AddSingleton<IFileTransferService, FileTransferService>();
