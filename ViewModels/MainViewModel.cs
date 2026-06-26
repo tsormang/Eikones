@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using Eikones.Models;
 using Eikones.Services;
 using Eikones.Views;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using Microsoft.Win32;
@@ -160,6 +161,39 @@ public partial class MainViewModel : ObservableObject
         }
 
         await TrySetDestinationFolderFromDropAsync(dialog.FolderName);
+    }
+
+    [RelayCommand]
+    private void OpenSourceFolderInExplorer()
+    {
+        if (!TryValidateFolder(_settings.SourceFolderPath, out var error))
+        {
+            MessageBox.Show(error, "Source folder", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        OpenFolderInExplorer(_settings.SourceFolderPath!);
+    }
+
+    [RelayCommand]
+    private void OpenDestinationFolderInExplorer()
+    {
+        if (!TryValidateFolder(_settings.DestinationFolderPath, out var error))
+        {
+            MessageBox.Show(error, "Destination folder", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        OpenFolderInExplorer(_settings.DestinationFolderPath!);
+    }
+
+    private static void OpenFolderInExplorer(string folderPath)
+    {
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = folderPath,
+            UseShellExecute = true
+        });
     }
 
     [RelayCommand]
