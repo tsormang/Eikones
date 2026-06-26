@@ -145,6 +145,24 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task SelectDestinationFolderAsync()
+    {
+        var dialog = new OpenFolderDialog
+        {
+            Title = "Select destination folder",
+            InitialDirectory = string.IsNullOrWhiteSpace(_settings.DestinationFolderPath) ? null : _settings.DestinationFolderPath,
+            Multiselect = false
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        await TrySetDestinationFolderFromDropAsync(dialog.FolderName);
+    }
+
+    [RelayCommand]
     private async Task CreateNewDestinationFolderAsync()
     {
         var name = DestinationList.NewFolderName.Trim();
